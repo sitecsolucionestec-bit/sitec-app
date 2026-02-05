@@ -1,0 +1,7 @@
+{
+  "name": "SITEC - Gestión de Servicios Técnicos",
+  "description": "Sistema integral de gestión empresarial para SITEC, incluyendo cotizaciones, agenda de visitas, reportes de ejecución con firma digital y alertas de mantenimiento preventivo.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
