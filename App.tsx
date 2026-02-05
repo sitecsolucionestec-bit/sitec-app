@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -9,7 +8,8 @@ import {
   Users, 
   Menu, 
   X,
-  Briefcase
+  Briefcase,
+  Settings
 } from 'lucide-react';
 import { AppState } from './types';
 import { loadData, saveData } from './utils';
@@ -20,9 +20,10 @@ import ReportsModule from './components/ReportsModule';
 import MaintenanceModule from './components/MaintenanceModule';
 import ClientsModule from './components/ClientsModule';
 import TechniciansModule from './components/TechniciansModule';
+import SettingsModule from './components/SettingsModule';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'quotes' | 'agenda' | 'reports' | 'maintenance' | 'clients' | 'technicians'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'quotes' | 'agenda' | 'reports' | 'maintenance' | 'clients' | 'technicians' | 'settings'>('dashboard');
   const [data, setData] = useState<AppState>(loadData());
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -40,11 +41,11 @@ const App: React.FC = () => {
     { id: 'agenda', label: 'Agenda y Visitas', icon: Calendar },
     { id: 'reports', label: 'Reportes de Trabajo', icon: ClipboardCheck },
     { id: 'maintenance', label: 'Mantenimiento', icon: Bell },
+    { id: 'settings', label: 'Configuración', icon: Settings },
   ];
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Sidebar Mobile Toggle */}
       <button 
         onClick={toggleSidebar}
         className="fixed top-4 left-4 z-50 p-2 bg-orange-500 text-white rounded-md lg:hidden shadow-lg"
@@ -52,7 +53,6 @@ const App: React.FC = () => {
         {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar */}
       <aside className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
@@ -94,7 +94,10 @@ const App: React.FC = () => {
               </div>
               <div className="flex-1">
                 <p className="text-white text-sm font-semibold">Administrador</p>
-                <p className="text-slate-400 text-xs">SITEC S.A.S.</p>
+                <div className="flex items-center space-x-1">
+                  <div className={`w-1.5 h-1.5 rounded-full ${data.syncConfig?.enabled ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                  <p className="text-slate-400 text-[10px] uppercase tracking-wider">{data.syncConfig?.enabled ? 'Cloud Activo' : 'Solo Local'}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -106,7 +109,12 @@ const App: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-800 capitalize">
             {navItems.find(i => i.id === activeTab)?.label}
           </h2>
-          <span className="text-sm font-medium text-gray-600">Hoy: {new Date().toLocaleDateString('es-CO')}</span>
+          <div className="flex items-center space-x-4">
+             {data.syncConfig?.lastSync && (
+               <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sincronizado: {new Date(data.syncConfig.lastSync).toLocaleTimeString()}</span>
+             )}
+             <span className="text-sm font-medium text-gray-600">Hoy: {new Date().toLocaleDateString('es-CO')}</span>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 lg:p-8">
@@ -117,6 +125,7 @@ const App: React.FC = () => {
           {activeTab === 'agenda' && <AgendaModule data={data} setData={setData} />}
           {activeTab === 'reports' && <ReportsModule data={data} setData={setData} />}
           {activeTab === 'maintenance' && <MaintenanceModule data={data} setData={setData} />}
+          {activeTab === 'settings' && <SettingsModule data={data} setData={setData} />}
         </div>
       </main>
     </div>

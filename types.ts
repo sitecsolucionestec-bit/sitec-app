@@ -1,4 +1,3 @@
-
 export enum VisitStatus {
   PENDING = 'Pendiente',
   CONFIRMED = 'Confirmada',
@@ -65,7 +64,7 @@ export interface ExecutionReport {
   id: string;
   visitId: string;
   clientId: string;
-  quoteId?: string; // Vinculación con cotización
+  quoteId?: string;
   date: string;
   activities: string;
   equipmentIntervened: string;
@@ -83,6 +82,13 @@ export interface MaintenanceAlert {
   status: 'Upcoming' | 'Overdue' | 'Done';
 }
 
+export interface SyncConfig {
+  enabled: boolean;
+  supabaseUrl: string;
+  supabaseKey: string;
+  lastSync?: string;
+}
+
 export interface AppState {
   clients: Client[];
   technicians: Technician[];
@@ -90,4 +96,5 @@ export interface AppState {
   visits: Visit[];
   reports: ExecutionReport[];
   maintenance: MaintenanceAlert[];
+  syncConfig?: SyncConfig;
 }
