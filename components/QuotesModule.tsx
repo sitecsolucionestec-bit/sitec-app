@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Plus, X, Download, MessageCircle, Trash2, CheckSquare, Square, ShoppingCart, Wrench, Settings, CheckCircle2, XCircle, Clock, Check } from 'lucide-react';
+import { Plus, X, Download, MessageCircle, Trash2, ShoppingCart, Wrench, Settings, Check } from 'lucide-react';
 import { AppState, Quote, QuoteItem, ServiceType } from '../types';
 import { formatCurrency, generateQuotePDF, shareWhatsApp, DEFAULT_QUOTE_OBSERVATIONS, DEFAULT_COMMERCIAL_CONDITIONS } from '../utils';
 
@@ -29,17 +28,14 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
   };
 
   const handleApproveQuote = (quote: Quote) => {
-    // Buscar si ya existe una cotización aprobada para este mismo cliente
     const existingApproved = data.quotes.find(q => q.clientId === quote.clientId && q.status === 'Approved' && q.id !== quote.id);
     
     if (existingApproved) {
       const confirmReplacement = window.confirm(
-        `El cliente ya tiene una cotización aprobada (${existingApproved.id}). ¿Desea reemplazarla por esta nueva cotización y marcar la anterior como enviada?`
+        `El cliente ya tiene una cotización aprobada (${existingApproved.id}). ¿Desea reemplazarla por esta nueva cotización?`
       );
-      
       if (!confirmReplacement) return;
       
-      // Actualizar ambas cotizaciones: la vieja pasa a 'Sent' y la nueva a 'Approved'
       const updatedQuotes = data.quotes.map(q => {
         if (q.id === existingApproved.id) return { ...q, status: 'Sent' as const };
         if (q.id === quote.id) return { ...q, status: 'Approved' as const };
@@ -76,12 +72,8 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
   };
 
   const handleSaveQuote = () => {
-    if (!selectedClient) {
-      alert('Por favor seleccione un cliente.');
-      return;
-    }
-    if (selectedServiceTypes.length === 0) {
-      alert('Por favor marque al menos un tipo de servicio.');
+    if (!selectedClient || selectedServiceTypes.length === 0) {
+      alert('Seleccione un cliente y al menos un tipo de servicio.');
       return;
     }
     
@@ -120,8 +112,7 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
 
   const createQuoteText = (q: Quote) => {
     const client = data.clients.find(c => c.id === q.clientId);
-    const services = q.serviceTypes?.join(', ') || 'Servicios Técnicos';
-    return `SITEC - Cotización ${q.id}\nCliente: ${client?.name}\nServicios: ${services}\nTotal: ${formatCurrency(q.total)}\n¡Gracias por preferirnos!`;
+    return `SITEC - Cotización ${q.id}\nCliente: ${client?.name}\nTotal: ${formatCurrency(q.total)}\n¡Gracias por preferirnos!`;
   };
 
   const getStatusStyle = (status: Quote['status']) => {
@@ -140,7 +131,7 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Cotizaciones</h2>
           <p className="text-sm text-gray-500">Gestione y genere propuestas comerciales para sus clientes.</p>
         </div>
-        <button onClick={() => setIsFormOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg shadow-orange-100 hover:scale-105 active:scale-95">
+        <button onClick={() => setIsFormOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg hover:scale-105 active:scale-95">
           <Plus size={20} /> <span>Nueva Cotización</span>
         </button>
       </div>
@@ -187,22 +178,18 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
                 </td>
                 <td className="px-6 py-4 flex space-x-1">
                   {q.status !== 'Approved' && (
-                    <button 
-                      onClick={() => handleApproveQuote(q)} 
-                      className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
-                      title="Aprobar Cotización"
-                    >
+                    <button onClick={() => handleApproveQuote(q)} className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
                       <Check size={18}/>
                     </button>
                   )}
-                  <button onClick={() => generateQuotePDF(q, data.clients.find(c => c.id === q.clientId))} className="p-2.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors" title="Descargar PDF">
+                  <button onClick={() => generateQuotePDF(q, data.clients.find(c => c.id === q.clientId))} className="p-2.5 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors">
                     <Download size={18}/>
                   </button>
-                  <button onClick={() => shareWhatsApp(createQuoteText(q))} className="p-2.5 hover:bg-emerald-50 rounded-xl text-emerald-500 transition-colors" title="Compartir WhatsApp">
+                  <button onClick={() => shareWhatsApp(createQuoteText(q))} className="p-2.5 hover:bg-emerald-50 rounded-xl text-emerald-500 transition-colors">
                     <MessageCircle size={18}/>
                   </button>
                   {q.status !== 'Approved' && (
-                    <button onClick={() => handleDeleteQuote(q.id)} className="p-2.5 hover:bg-red-50 text-red-400 rounded-xl transition-colors" title="Eliminar">
+                    <button onClick={() => handleDeleteQuote(q.id)} className="p-2.5 hover:bg-red-50 text-red-400 rounded-xl transition-colors">
                       <Trash2 size={18}/>
                     </button>
                   )}
@@ -227,36 +214,29 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
              <div className="space-y-6">
                <div className="space-y-2">
                  <label className="block text-sm font-bold text-slate-700 ml-1">Cliente Beneficiario</label>
-                 <select className="w-full border border-gray-200 p-4 rounded-2xl outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all bg-gray-50/50 text-slate-700 font-medium" value={selectedClient} onChange={e => setSelectedClient(e.target.value)}>
-                   <option value="">Seleccione el cliente de la base de datos...</option>
+                 <select className="w-full border border-gray-200 p-4 rounded-2xl outline-none focus:ring-4 focus:ring-orange-500/10 transition-all bg-gray-50 text-slate-700 font-medium" value={selectedClient} onChange={e => setSelectedClient(e.target.value)}>
+                   <option value="">Seleccione el cliente...</option>
                    {data.clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                  </select>
                </div>
 
                <div className="space-y-3">
-                 <label className="block text-sm font-bold text-slate-700 ml-1">Marque los Servicios a Cotizar:</label>
+                 <label className="block text-sm font-bold text-slate-700 ml-1">Tipo de Servicio:</label>
                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {serviceOptions.map(option => (
                       <button 
                         key={option.id}
                         onClick={() => toggleServiceType(option.id)}
-                        className={`group relative flex items-center space-x-3 p-4 rounded-2xl border-2 transition-all ${
+                        className={`relative flex items-center space-x-3 p-4 rounded-2xl border-2 transition-all ${
                           selectedServiceTypes.includes(option.id) 
                           ? 'border-orange-500 bg-orange-50 shadow-md shadow-orange-100' 
                           : 'border-gray-100 bg-white hover:border-gray-200'
                         }`}
                       >
-                        <div className={`p-2 rounded-lg transition-colors ${
-                          selectedServiceTypes.includes(option.id) ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'
-                        }`}>
+                        <div className={`p-2 rounded-lg ${selectedServiceTypes.includes(option.id) ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
                           <option.icon size={18}/>
                         </div>
-                        <div className="text-left">
-                          <p className={`text-sm font-bold leading-tight ${selectedServiceTypes.includes(option.id) ? 'text-orange-700' : 'text-slate-500'}`}>{option.label}</p>
-                        </div>
-                        <div className="absolute top-2 right-2">
-                          {selectedServiceTypes.includes(option.id) ? <CheckSquare size={16} className="text-orange-500"/> : <Square size={16} className="text-gray-200"/>}
-                        </div>
+                        <p className={`text-sm font-bold ${selectedServiceTypes.includes(option.id) ? 'text-orange-700' : 'text-slate-500'}`}>{option.label}</p>
                       </button>
                     ))}
                  </div>
@@ -264,19 +244,12 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
              </div>
 
              <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 space-y-4">
-               <div className="flex justify-between items-center px-1">
-                 <p className="text-sm font-bold text-slate-800 flex items-center">
-                   <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mr-2"></span>
-                   Desglose de Equipos y Materiales
-                 </p>
-                 <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Añadir a la tabla</span>
-               </div>
-               
+               <p className="text-sm font-bold text-slate-800">Equipos y Materiales</p>
                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                 <input className="md:col-span-6 border border-gray-200 p-4 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none bg-white font-medium text-slate-700" placeholder="Descripción del producto o equipo" value={newItem.description} onChange={e => setNewItem({...newItem, description: e.target.value})} />
-                 <input type="number" className="md:col-span-2 border border-gray-200 p-4 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none bg-white text-center font-bold" placeholder="Cant." value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: +e.target.value})} />
-                 <input type="number" className="md:col-span-3 border border-gray-200 p-4 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none bg-white font-bold" placeholder="Precio Unit." value={newItem.unitPrice} onChange={e => setNewItem({...newItem, unitPrice: +e.target.value})} />
-                 <button onClick={handleAddItem} className="md:col-span-1 bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-center hover:bg-slate-800 transition-all active:scale-90">
+                 <input className="md:col-span-6 border border-gray-200 p-4 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none bg-white font-medium" placeholder="Descripción" value={newItem.description} onChange={e => setNewItem({...newItem, description: e.target.value})} />
+                 <input type="number" className="md:col-span-2 border border-gray-200 p-4 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none bg-white text-center font-bold" value={newItem.quantity} onChange={e => setNewItem({...newItem, quantity: +e.target.value})} />
+                 <input type="number" className="md:col-span-3 border border-gray-200 p-4 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none bg-white font-bold" placeholder="Precio" value={newItem.unitPrice} onChange={e => setNewItem({...newItem, unitPrice: +e.target.value})} />
+                 <button onClick={handleAddItem} className="md:col-span-1 bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-center hover:bg-slate-800 transition-all">
                    <Plus size={20}/>
                  </button>
                </div>
@@ -284,22 +257,14 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
                {items.length > 0 && (
                  <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden mt-4">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-50 text-slate-500 border-b">
-                        <tr>
-                          <th className="px-4 py-3 text-left font-bold uppercase tracking-wider">Descripción</th>
-                          <th className="px-4 py-3 text-center font-bold uppercase tracking-wider">Cant.</th>
-                          <th className="px-4 py-3 text-right font-bold uppercase tracking-wider">Total Item</th>
-                          <th className="px-4 py-3"></th>
-                        </tr>
-                      </thead>
                       <tbody className="divide-y divide-slate-100">
                         {items.map((it) => (
-                          <tr key={it.id} className="hover:bg-slate-50/50">
+                          <tr key={it.id}>
                             <td className="px-4 py-3 text-slate-700 font-medium">{it.description}</td>
                             <td className="px-4 py-3 text-center font-bold text-slate-500">{it.quantity}</td>
                             <td className="px-4 py-3 text-right font-bold text-slate-900">{formatCurrency(it.quantity * it.unitPrice)}</td>
                             <td className="px-4 py-3 text-center">
-                              <button onClick={() => handleRemoveItem(it.id)} className="text-red-400 hover:text-red-600 transition-colors p-1.5"><Trash2 size={16}/></button>
+                              <button onClick={() => handleRemoveItem(it.id)} className="text-red-400 p-1.5"><Trash2 size={16}/></button>
                             </td>
                           </tr>
                         ))}
@@ -311,24 +276,13 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-700 ml-1">Valor Mano de Obra (Instalación/Config.)</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                    <input type="number" className="w-full border border-gray-200 p-4 pl-8 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-bold text-slate-700" placeholder="0" value={laborCost} onChange={e => setLaborCost(+e.target.value)} />
-                  </div>
+                  <label className="block text-sm font-bold text-slate-700 ml-1">Mano de Obra ($)</label>
+                  <input type="number" className="w-full border border-gray-200 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/50 font-bold" value={laborCost} onChange={e => setLaborCost(+e.target.value)} />
                 </div>
-                <div className="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl space-y-2">
+                <div className="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl">
                   <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    <span>Subtotal Equipos + MO:</span>
-                    <span>{formatCurrency(items.reduce((acc, i) => acc + (i.quantity * i.unitPrice), 0) + laborCost)}</span>
-                  </div>
-                  <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase tracking-widest border-b border-slate-800 pb-2">
-                    <span>IVA Aplicado (19%):</span>
-                    <span>{formatCurrency((items.reduce((acc, i) => acc + (i.quantity * i.unitPrice), 0) + laborCost) * 0.19)}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-sm font-bold text-slate-200 uppercase tracking-tighter">Total General</span>
-                    <span className="text-2xl font-black text-orange-400 tracking-tight">
+                    <span>Total General</span>
+                    <span className="text-xl font-black text-orange-400">
                       {formatCurrency((items.reduce((acc, i) => acc + (i.quantity * i.unitPrice), 0) + laborCost) * 1.19)}
                     </span>
                   </div>
@@ -336,9 +290,9 @@ const QuotesModule: React.FC<QuotesModuleProps> = ({ data, setData }) => {
              </div>
 
              <div className="flex space-x-4 pt-4">
-                <button onClick={() => setIsFormOpen(false)} className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-all">Descartar</button>
-                <button onClick={handleSaveQuote} className="flex-[2] bg-orange-500 text-white py-4 rounded-2xl font-bold text-lg hover:bg-orange-600 shadow-xl shadow-orange-100 transition-all active:scale-[0.98]">
-                  Generar Cotización y PDF
+                <button onClick={() => setIsFormOpen(false)} className="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold">Cancelar</button>
+                <button onClick={handleSaveQuote} className="flex-[2] bg-orange-500 text-white py-4 rounded-2xl font-bold text-lg hover:bg-orange-600 shadow-xl transition-all">
+                  Guardar y Generar PDF
                 </button>
              </div>
           </div>
